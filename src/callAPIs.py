@@ -2,6 +2,7 @@ import requests
 import json
 from requests.exceptions import HTTPError
 from datetime import datetime
+import sys
 
 
 def getToken(url):
@@ -105,21 +106,27 @@ def downloadFile(url, token, downloadID):
 
 def getRequestIDforImport(url, token, filepath):    # import func
 
-    filezip = open(filepath, 'rb')
-    files = {
-        "upload": ("testttttt.zip", filezip),
-        "actionIfExisting": "OVERWRITE",
-        "publicWorkspace": "true"
-    }
-    headers = {"X-Authorization": token}
-
     try:
-        res = requests.post(url + 'v2/blm/import', files=files, headers=headers)
-        res.raise_for_status()
-    except HTTPError as err:
-        status_code = err.response.status_code
-        if status_code == 401:
-            token = getToken(url)
+        filezip = open(filepath, 'rb')
+    except OSError:
+        print("Could not open/read file:", filepath)
+        sys.exit(0)
+
+    with filezip:
+        files = {
+            "upload": ("testttttt.zip", filezip),
+            "actionIfExisting": "OVERWRITE",
+            "publicWorkspace": "true"
+        }
+        headers = {"X-Authorization": token}
+
+        try:
             res = requests.post(url + 'v2/blm/import', files=files, headers=headers)
-    res_dict = json.loads(res.text)
-    return res_dict
+            res.raise_for_status()
+        except HTTPError as err:
+            status_code = err.response.status_code
+            if status_code == 401:
+                token = getToken(url)
+                res = requests.post(url + 'v2/blm/import', files=files, headers=headers)
+        res_dict = json.loads(res.text)
+        return res_dict
