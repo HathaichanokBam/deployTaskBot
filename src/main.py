@@ -10,7 +10,6 @@ filepath = 'C:/Users/Administrator/Downloads/test.zip'
 
 token = getToken(url)
 
-
 # export
 publicTasks = listPublicTasks(url, token)
 print(publicTasks)
